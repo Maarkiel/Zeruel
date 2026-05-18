@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import random
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 import discord
@@ -129,7 +130,7 @@ class StudyCog(commands.Cog):
             self.bot.database, session_id,
             questions_practiced=questions_practiced,
             correct_answers=correct_answers,
-            ended_at="CURRENT_TIMESTAMP",
+            ended_at=datetime.now().isoformat(),
         )
 
         pct = round(correct_answers / questions_practiced * 100, 1) if questions_practiced > 0 else 0

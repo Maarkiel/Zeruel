@@ -89,6 +89,7 @@ class TestSession:
         questions: list[dict[str, object]],
         time_limit_minutes: int,
         passing_threshold: int,
+        on_finish: object | None = None,
     ) -> None:
         self.db = db
         self.test_instance_id = test_instance_id
@@ -99,6 +100,7 @@ class TestSession:
         self.start_time = datetime.now()
         self.deadline = self.start_time + timedelta(minutes=time_limit_minutes)
         self._finished = False
+        self.on_finish = on_finish
 
     @property
     def time_remaining(self) -> str:
@@ -217,6 +219,9 @@ class TestSession:
 
         await models.update_test_instance(self.db, self.test_instance_id, **update_kwargs)
 
+        if self.on_finish and callable(self.on_finish):
+            self.on_finish()
+
         embed = test_result_embed(
             self.test_instance_id,
             abcde_score,
@@ -328,16 +333,19 @@ class FlashcardRatingView(discord.ui.View):
     @discord.ui.button(label="Tak \u2705", style=discord.ButtonStyle.green)
     async def yes(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         self.rating = "yes"
+        self.stop()
         await interaction.response.defer()
 
     @discord.ui.button(label="Nie \u274c", style=discord.ButtonStyle.red)
     async def no(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         self.rating = "no"
+        self.stop()
         await interaction.response.defer()
 
     @discord.ui.button(label="Częściowo \U0001f914", style=discord.ButtonStyle.secondary)
     async def partial(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         self.rating = "partial"
+        self.stop()
         await interaction.response.defer()
 
     @discord.ui.button(label="Następna fiszka \u27a1\ufe0f", style=discord.ButtonStyle.primary, row=1)

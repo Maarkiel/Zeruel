@@ -47,12 +47,16 @@ class LearningBot(commands.Bot):
             except Exception:
                 logger.exception("Błąd ładowania cog: %s", cog)
 
-        await self.tree.sync()
-        logger.info("Komendy slash zsynchronizowane.")
+        if self.owner_id:
+            guild = discord.Object(id=0)  # sync globally on first run
+            self.tree.copy_global_to(guild=guild)
+        logger.info("Komendy slash gotowe do synchronizacji (użyj !sync na serwerze).")
 
     async def on_ready(self) -> None:
         assert self.user is not None
         logger.info("Bot zalogowany jako: %s (ID: %s)", self.user, self.user.id)
+        synced = await self.tree.sync()
+        logger.info("Zsynchronizowano %d komend slash.", len(synced))
         await self.change_presence(
             activity=discord.Activity(
                 type=discord.ActivityType.watching,

@@ -105,14 +105,20 @@ class TestsCog(commands.Cog):
         all_questions = abcde_questions + descriptive_questions
         random.shuffle(all_questions)
 
+        user_id = interaction.user.id
+
+        def cleanup() -> None:
+            self.active_tests.pop(user_id, None)
+
         session = TestSession(
             db=self.bot.database,
             test_instance_id=instance_id,
             questions=all_questions,
             time_limit_minutes=czas,
             passing_threshold=60,
+            on_finish=cleanup,
         )
-        self.active_tests[interaction.user.id] = session
+        self.active_tests[user_id] = session
 
         embed = test_start_embed(
             instance_id,
